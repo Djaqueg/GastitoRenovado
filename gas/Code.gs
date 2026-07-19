@@ -115,17 +115,48 @@ function formatDateValue(value) {
   return String(value);
 }
 
+function padNumber(value) {
+  return value < 10 ? "0" + value : String(value);
+}
+
+function getPeriodDateRange(month, year, periodMode) {
+  if (!periodMode || periodMode === "calendar") {
+    var lastDay = new Date(year, month, 0).getDate();
+    return {
+      from: year + "-" + padNumber(month) + "-01",
+      to: year + "-" + padNumber(month) + "-" + padNumber(lastDay),
+    };
+  }
+
+  var startMonth = month - 1;
+  var startYear = year;
+  if (startMonth < 1) {
+    startMonth = 12;
+    startYear = year - 1;
+  }
+
+  return {
+    from: startYear + "-" + padNumber(startMonth) + "-25",
+    to: year + "-" + padNumber(month) + "-24",
+  };
+}
+
+function movementBelongsToPeriod(fecha, month, year, periodMode) {
+  var range = getPeriodDateRange(month, year, periodMode);
+  return fecha >= range.from && fecha <= range.to;
+}
+
 function listMovements(params) {
   const limit = parseInt(params.limit) || 15;
   const month = params.month ? parseInt(params.month) : null;
   const year = params.year ? parseInt(params.year) : null;
+  const periodMode = params.period_mode || "calendar";
 
   let movements = getAllRows();
 
   if (month && year) {
     movements = movements.filter(function (m) {
-      const parts = m.fecha.split("-");
-      return parseInt(parts[1]) === month && parseInt(parts[0]) === year;
+      return movementBelongsToPeriod(m.fecha, month, year, periodMode);
     });
   }
 
@@ -141,14 +172,14 @@ function listMovements(params) {
 function getSummary(params) {
   const month = parseInt(params.month);
   const year = parseInt(params.year);
+  const periodMode = params.period_mode || "calendar";
 
   if (!month || !year) {
     throw new Error("Mes y año son requeridos para el resumen");
   }
 
   const movements = getAllRows().filter(function (m) {
-    const parts = m.fecha.split("-");
-    return parseInt(parts[1]) === month && parseInt(parts[0]) === year;
+    return movementBelongsToPeriod(m.fecha, month, year, periodMode);
   });
 
   let ingresos = 0;
@@ -315,6 +346,7 @@ function upsertBudget(data) {
 function getBudgetStatus(params) {
   const month = parseInt(params.month);
   const year = parseInt(params.year);
+  const periodMode = params.period_mode || "calendar";
 
   if (!month || !year) {
     throw new Error("Mes y año son requeridos para el estado del presupuesto");
@@ -322,10 +354,8 @@ function getBudgetStatus(params) {
 
   const budgets = listBudgets();
   const movements = getAllRows().filter(function (m) {
-    const parts = m.fecha.split("-");
     return (
-      parseInt(parts[1]) === month &&
-      parseInt(parts[0]) === year &&
+      movementBelongsToPeriod(m.fecha, month, year, periodMode) &&
       m.tipo === "Gasto"
     );
   });

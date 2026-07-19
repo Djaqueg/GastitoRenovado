@@ -7,9 +7,14 @@ import type { Summary } from "@/lib/types";
 interface DashboardCardsProps {
   summary: Summary;
   loading?: boolean;
+  periodLabel?: string;
 }
 
-export function DashboardCards({ summary, loading }: DashboardCardsProps) {
+export function DashboardCards({
+  summary,
+  loading,
+  periodLabel = "del mes seleccionado",
+}: DashboardCardsProps) {
   const balancePositive = summary.balance >= 0;
 
   if (loading) {
@@ -29,7 +34,7 @@ export function DashboardCards({ summary, loading }: DashboardCardsProps) {
         <p className="mt-2 text-3xl font-bold text-primary">
           {formatCLP(summary.ingresos)}
         </p>
-        <p className="mt-1 text-xs text-gray-400">del mes seleccionado</p>
+        <p className="mt-1 text-xs text-gray-400">{periodLabel}</p>
       </Card>
 
       <Card>
@@ -37,7 +42,7 @@ export function DashboardCards({ summary, loading }: DashboardCardsProps) {
         <p className="mt-2 text-3xl font-bold text-amber-600">
           {formatCLP(summary.gastos)}
         </p>
-        <p className="mt-1 text-xs text-gray-400">del mes seleccionado</p>
+        <p className="mt-1 text-xs text-gray-400">{periodLabel}</p>
       </Card>
 
       <Card highlighted>
