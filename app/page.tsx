@@ -26,19 +26,26 @@ import {
 
 } from "@/lib/gas-client";
 
+import { formatPeriodRange } from "@/lib/month-period";
+
+import {
+  useCurrentPeriodSelection,
+  useMonthPeriodMode,
+} from "@/lib/use-month-period-mode";
+
 import type { Movement, Summary } from "@/lib/types";
-
-
-
-const now = new Date();
 
 
 
 export default function HomePage() {
 
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const { mode: periodMode, setMode: setPeriodMode, isReady } =
+    useMonthPeriodMode();
 
-  const [year, setYear] = useState(now.getFullYear());
+  const { month, year, setMonth, setYear } = useCurrentPeriodSelection(
+    periodMode,
+    isReady
+  );
 
   const [summary, setSummary] = useState<Summary>({
 
@@ -66,6 +73,8 @@ export default function HomePage() {
 
   const loadData = useCallback(async () => {
 
+    if (!isReady) return;
+
     setLoadingSummary(true);
 
     setLoadingMovements(true);
@@ -78,7 +87,7 @@ export default function HomePage() {
 
       const [summaryData, movementsData] = await Promise.all([
 
-        fetchSummary(month, year),
+        fetchSummary(month, year, periodMode),
 
         fetchMovements(500),
 
@@ -108,7 +117,7 @@ export default function HomePage() {
 
     }
 
-  }, [month, year]);
+  }, [isReady, month, year, periodMode]);
 
 
 
@@ -198,10 +207,12 @@ export default function HomePage() {
           <MonthSelector
             month={month}
             year={year}
+            periodMode={periodMode}
             onChange={(m, y) => {
               setMonth(m);
               setYear(y);
             }}
+            onPeriodModeChange={setPeriodMode}
           />
         }
 
@@ -221,7 +232,11 @@ export default function HomePage() {
 
         <div className="mb-8">
 
-          <DashboardCards summary={summary} loading={loadingSummary} />
+          <DashboardCards
+            summary={summary}
+            loading={loadingSummary}
+            periodLabel={formatPeriodRange(month, year, periodMode)}
+          />
 
         </div>
 
@@ -232,6 +247,8 @@ export default function HomePage() {
           movements={movements}
 
           loading={loadingMovements}
+
+          periodMode={periodMode}
 
           onEdit={handleEdit}
 

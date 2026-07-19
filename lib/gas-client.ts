@@ -6,6 +6,7 @@ import type {
   MovementInput,
   Summary,
 } from "./types";
+import type { MonthPeriodMode } from "./month-period";
 
 
 
@@ -106,57 +107,37 @@ async function gasMutate<T>(body: object): Promise<GasResponse<T>> {
 
 
 export async function fetchSummary(
-
   month: number,
-
-  year: number
-
+  year: number,
+  periodMode: MonthPeriodMode = "calendar"
 ): Promise<Summary> {
-
   const result = await gasRequest<Summary>({
-
     action: "summary",
-
     month: String(month),
-
     year: String(year),
-
+    period_mode: periodMode,
   });
-
   return result.data ?? { ingresos: 0, gastos: 0, balance: 0 };
-
 }
 
 
 
 export async function fetchMovements(
-
   limit = 15,
-
   month?: number,
-
-  year?: number
-
+  year?: number,
+  periodMode: MonthPeriodMode = "calendar"
 ): Promise<Movement[]> {
-
   const params: Record<string, string> = {
-
     action: "list",
-
     limit: String(limit),
-
+    period_mode: periodMode,
   };
-
   if (month !== undefined) params.month = String(month);
-
   if (year !== undefined) params.year = String(year);
 
-
-
   const result = await gasRequest<Movement[]>(params);
-
   return result.data ?? [];
-
 }
 
 
@@ -216,12 +197,14 @@ export async function fetchBudgets(): Promise<Budget[]> {
 
 export async function fetchBudgetStatus(
   month: number,
-  year: number
+  year: number,
+  periodMode: MonthPeriodMode = "calendar"
 ): Promise<BudgetStatus[]> {
   const result = await gasRequest<BudgetStatus[]>({
     action: "budget_status",
     month: String(month),
     year: String(year),
+    period_mode: periodMode,
   });
   return result.data ?? [];
 }

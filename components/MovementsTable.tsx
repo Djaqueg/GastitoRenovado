@@ -2,6 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { formatCLP, formatDate } from "@/lib/format";
+import {
+  getCurrentPeriodMonthYear,
+  getPeriodDateRange,
+  getPreviousPeriod,
+  type MonthPeriodMode,
+} from "@/lib/month-period";
 import type { Movement } from "@/lib/types";
 import { Button } from "./ui/Button";
 import { RowActionsMenu } from "./RowActionsMenu";
@@ -9,18 +15,18 @@ import { RowActionsMenu } from "./RowActionsMenu";
 interface MovementsTableProps {
   movements: Movement[];
   loading?: boolean;
+  periodMode?: MonthPeriodMode;
   onEdit: (movement: Movement) => void;
   onDelete: (movement: Movement) => void;
 }
 
-function getLastMonthRange() {
-  const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const to = new Date(now.getFullYear(), now.getMonth(), 0);
-  return {
-    from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
-  };
+function getLastPeriodRange(
+  month: number,
+  year: number,
+  periodMode: MonthPeriodMode
+) {
+  const previous = getPreviousPeriod(month, year);
+  return getPeriodDateRange(previous.month, previous.year, periodMode);
 }
 
 function matchesSearch(movement: Movement, query: string): boolean {
@@ -56,6 +62,7 @@ function matchesDateRange(
 export function MovementsTable({
   movements,
   loading,
+  periodMode = "calendar",
   onEdit,
   onDelete,
 }: MovementsTableProps) {
@@ -75,7 +82,8 @@ export function MovementsTable({
   const hasFilters = search !== "" || dateFrom !== "" || dateTo !== "";
 
   function applyLastMonth() {
-    const { from, to } = getLastMonthRange();
+    const { month, year } = getCurrentPeriodMonthYear(periodMode);
+    const { from, to } = getLastPeriodRange(month, year, periodMode);
     setDateFrom(from);
     setDateTo(to);
     setSearch("");

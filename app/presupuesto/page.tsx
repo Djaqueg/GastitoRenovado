@@ -7,24 +7,32 @@ import { MonthSelector } from "@/components/MonthSelector";
 import { BudgetPanel } from "@/components/BudgetPanel";
 import { MovementFormModal } from "@/components/MovementFormModal";
 import { fetchBudgetStatus } from "@/lib/gas-client";
+import {
+  useCurrentPeriodSelection,
+  useMonthPeriodMode,
+} from "@/lib/use-month-period-mode";
 import type { BudgetStatus } from "@/lib/types";
 
-const now = new Date();
-
 export default function PresupuestoPage() {
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
+  const { mode: periodMode, setMode: setPeriodMode, isReady } =
+    useMonthPeriodMode();
+  const { month, year, setMonth, setYear } = useCurrentPeriodSelection(
+    periodMode,
+    isReady
+  );
   const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
   const loadBudgets = useCallback(async () => {
+    if (!isReady) return;
+
     setLoading(true);
     setError("");
 
     try {
-      const data = await fetchBudgetStatus(month, year);
+      const data = await fetchBudgetStatus(month, year, periodMode);
       setBudgets(data);
     } catch (err) {
       setError(
@@ -35,7 +43,7 @@ export default function PresupuestoPage() {
     } finally {
       setLoading(false);
     }
-  }, [month, year]);
+  }, [isReady, month, year, periodMode]);
 
   useEffect(() => {
     loadBudgets();
@@ -51,10 +59,12 @@ export default function PresupuestoPage() {
           <MonthSelector
             month={month}
             year={year}
+            periodMode={periodMode}
             onChange={(m, y) => {
               setMonth(m);
               setYear(y);
             }}
+            onPeriodModeChange={setPeriodMode}
           />
         }
       >
