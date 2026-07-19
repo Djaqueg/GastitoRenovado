@@ -30,7 +30,7 @@ Aplicación web de gestión financiera familiar construida con **Next.js**, **Ta
 | id | fecha | tipo | categoria | subcategoria | monto | medio_pago | detalle | fecha_registro |
 
 4. Copia el **ID de la planilla** desde la URL:
-   `https://docs.google.com/spreadsheets/d/1Mac_BaYC1U_3DEyjkcQaGoqbdh0XDpL1RUYHvPAaulo/edit`
+   `https://docs.google.com/spreadsheets/d/**********`
 
 ### 2. Google Apps Script
 
