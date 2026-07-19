@@ -30,12 +30,12 @@ export function MonthSelector({
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+    <div className="flex w-full flex-col items-start gap-2 md:w-auto md:items-end">
+      <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap md:items-center md:justify-end md:gap-3">
         <select
           value={periodMode}
           onChange={(e) => onPeriodModeChange(e.target.value as MonthPeriodMode)}
-          className="input-field w-auto min-w-[180px] text-sm"
+          className="input-field col-span-2 w-full text-sm md:col-span-1 md:w-auto md:min-w-[180px]"
           aria-label="Tipo de período"
         >
           {(Object.keys(MONTH_PERIOD_MODE_LABELS) as MonthPeriodMode[]).map(
@@ -49,7 +49,7 @@ export function MonthSelector({
         <select
           value={month}
           onChange={(e) => onChange(Number(e.target.value), year)}
-          className="input-field w-auto min-w-[140px]"
+          className="input-field w-full md:w-auto md:min-w-[140px]"
           aria-label="Mes"
         >
           {MONTHS.map((name, i) => (
@@ -61,7 +61,7 @@ export function MonthSelector({
         <select
           value={year}
           onChange={(e) => onChange(month, Number(e.target.value))}
-          className="input-field w-auto min-w-[100px]"
+          className="input-field w-full md:w-auto md:min-w-[100px]"
           aria-label="Año"
         >
           {years.map((y) => (

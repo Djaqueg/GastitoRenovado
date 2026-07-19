@@ -62,14 +62,14 @@ export function AppShell({
       </div>
 
       <main className="min-h-screen p-4 md:ml-60 md:p-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
             {subtitle && (
               <p className="text-sm text-gray-500">{subtitle}</p>
             )}
           </div>
-          {headerExtra}
+          {headerExtra && <div className="w-full md:w-auto">{headerExtra}</div>}
         </div>
         {children}
       </main>
