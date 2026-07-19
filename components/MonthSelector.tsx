@@ -16,12 +16,11 @@ export function MonthSelector({ month, year, onChange }: MonthSelectorProps) {
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <select
         value={month}
         onChange={(e) => onChange(Number(e.target.value), year)}
-        className="input-field w-auto min-w-0 !rounded-lg !px-2.5 !py-1.5 text-xs sm:min-w-[140px] sm:!rounded-xl sm:!px-4 sm:!py-2.5 sm:text-sm"
-        aria-label="Mes"
+        className="input-field w-auto min-w-[140px]"
       >
         {MONTHS.map((name, i) => (
           <option key={name} value={i + 1}>
@@ -32,8 +31,7 @@ export function MonthSelector({ month, year, onChange }: MonthSelectorProps) {
       <select
         value={year}
         onChange={(e) => onChange(month, Number(e.target.value))}
-        className="input-field w-auto min-w-0 !rounded-lg !px-2.5 !py-1.5 text-xs sm:min-w-[100px] sm:!rounded-xl sm:!px-4 sm:!py-2.5 sm:text-sm"
-        aria-label="Año"
+        className="input-field w-auto min-w-[100px]"
       >
         {years.map((y) => (
           <option key={y} value={y}>

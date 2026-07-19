@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { formatCLP, formatDate } from "@/lib/format";
 import type { Movement } from "@/lib/types";
+import { Button } from "./ui/Button";
 import { RowActionsMenu } from "./RowActionsMenu";
 
 interface MovementsTableProps {
@@ -61,7 +62,6 @@ export function MovementsTable({
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const filteredMovements = useMemo(() => {
     return movements.filter(
@@ -71,16 +71,13 @@ export function MovementsTable({
     );
   }, [movements, search, dateFrom, dateTo]);
 
-  const hasDateFilters = dateFrom !== "" || dateTo !== "";
-  const hasFilters = search !== "" || hasDateFilters;
-  const showFilters = filtersOpen || hasDateFilters;
+  const hasFilters = search !== "" || dateFrom !== "" || dateTo !== "";
 
   function applyLastMonth() {
     const { from, to } = getLastMonthRange();
     setDateFrom(from);
     setDateTo(to);
     setSearch("");
-    setFiltersOpen(true);
   }
 
   function clearFilters() {
@@ -103,155 +100,92 @@ export function MovementsTable({
 
   return (
     <div className="card overflow-hidden p-0">
-      <div className="border-b border-gray-100 px-4 py-3 sm:px-6 sm:py-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+      <div className="border-b border-gray-100 px-6 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
               Últimos Movimientos
             </h2>
-            <p className="text-xs text-gray-500 sm:text-sm">
+            <p className="text-sm text-gray-500">
               {hasFilters
                 ? `${filteredMovements.length} de ${movements.length} movimientos`
                 : `${movements.length} movimientos registrados`}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((open) => !open)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:hidden ${
-                showFilters
-                  ? "bg-primary-mint text-primary"
-                  : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-              }`}
-              aria-expanded={showFilters}
-              aria-controls="movements-filters"
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              className="!px-3 !py-2 text-sm"
+              onClick={applyLastMonth}
             >
+              Último mes
+            </Button>
+            {hasFilters && (
+              <Button
+                variant="secondary"
+                className="!px-3 !py-2 text-sm"
+                onClick={clearFilters}
+              >
+                Limpiar filtros
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="sm:col-span-2 lg:col-span-2">
+            <label className="label-field" htmlFor="movements-search">
+              Buscar
+            </label>
+            <div className="relative">
               <svg
-                className="h-3.5 w-3.5"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-              Filtros
-              {hasDateFilters && (
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={applyLastMonth}
-              className="hidden rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 sm:inline-flex"
-            >
-              Último mes
-            </button>
-            {hasFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="hidden rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800 sm:inline-flex"
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-3 sm:mt-4">
-          <div className="relative">
-            <label className="sr-only" htmlFor="movements-search">
-              Buscar
-            </label>
-            <svg
-              className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400 sm:left-3 sm:h-4 sm:w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              <input
+                id="movements-search"
+                type="search"
+                className="input-field pl-10"
+                placeholder="Categoría, detalle, monto..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
-            </svg>
+            </div>
+          </div>
+
+          <div>
+            <label className="label-field" htmlFor="movements-date-from">
+              Desde
+            </label>
             <input
-              id="movements-search"
-              type="search"
-              className="input-field !rounded-lg !py-2 !pl-8 !pr-3 text-sm sm:!rounded-xl sm:!py-2.5 sm:!pl-10 sm:!pr-4"
-              placeholder="Buscar por categoría, detalle, monto..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              id="movements-date-from"
+              type="date"
+              className="input-field"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
             />
           </div>
 
-          <div
-            id="movements-filters"
-            className={`mt-2 grid grid-cols-2 gap-2 sm:mt-3 sm:grid-cols-2 sm:gap-3 lg:grid-cols-2 ${
-              showFilters ? "grid" : "hidden sm:grid"
-            }`}
-          >
-            <div>
-              <label
-                className="mb-1 hidden text-xs font-medium text-gray-500 sm:block"
-                htmlFor="movements-date-from"
-              >
-                Desde
-              </label>
-              <input
-                id="movements-date-from"
-                type="date"
-                className="input-field !rounded-lg !px-2.5 !py-1.5 text-xs sm:!rounded-xl sm:!px-4 sm:!py-2.5 sm:text-sm"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                aria-label="Desde"
-              />
-            </div>
-
-            <div>
-              <label
-                className="mb-1 hidden text-xs font-medium text-gray-500 sm:block"
-                htmlFor="movements-date-to"
-              >
-                Hasta
-              </label>
-              <input
-                id="movements-date-to"
-                type="date"
-                className="input-field !rounded-lg !px-2.5 !py-1.5 text-xs sm:!rounded-xl sm:!px-4 sm:!py-2.5 sm:text-sm"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                aria-label="Hasta"
-              />
-            </div>
-
-            <div className="col-span-2 flex items-center gap-1 sm:hidden">
-              <button
-                type="button"
-                onClick={applyLastMonth}
-                className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800"
-              >
-                Último mes
-              </button>
-              {hasFilters && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700"
-                >
-                  Limpiar
-                </button>
-              )}
-            </div>
+          <div>
+            <label className="label-field" htmlFor="movements-date-to">
+              Hasta
+            </label>
+            <input
+              id="movements-date-to"
+              type="date"
+              className="input-field"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
           </div>
         </div>
       </div>
