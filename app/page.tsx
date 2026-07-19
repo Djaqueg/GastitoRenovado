@@ -16,8 +16,6 @@ import { MovementsTable } from "@/components/MovementsTable";
 
 import { MovementFormModal } from "@/components/MovementFormModal";
 
-import { Button } from "@/components/ui/Button";
-
 import {
 
   fetchSummary,
@@ -197,29 +195,14 @@ export default function HomePage() {
         onNewMovement={handleNewMovement}
 
         headerExtra={
-
-          <div className="flex items-center gap-3">
-
-            <MonthSelector
-
-              month={month}
-
-              year={year}
-
-              onChange={(m, y) => {
-
-                setMonth(m);
-
-                setYear(y);
-
-              }}
-
-            />
-
-            <Button onClick={handleNewMovement}>+ Nuevo movimiento</Button>
-
-          </div>
-
+          <MonthSelector
+            month={month}
+            year={year}
+            onChange={(m, y) => {
+              setMonth(m);
+              setYear(y);
+            }}
+          />
         }
 
       >
