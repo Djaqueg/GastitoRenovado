@@ -198,7 +198,7 @@ export default function HomePage() {
 
         headerExtra={
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
 
             <MonthSelector
 
@@ -216,11 +216,7 @@ export default function HomePage() {
 
             />
 
-            <Button onClick={handleNewMovement} className="hidden sm:inline-flex">
-
-              + Nuevo movimiento
-
-            </Button>
+            <Button onClick={handleNewMovement}>+ Nuevo movimiento</Button>
 
           </div>
 

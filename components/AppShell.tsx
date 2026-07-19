@@ -62,11 +62,11 @@ export function AppShell({
       </div>
 
       <main className="min-h-screen p-4 md:ml-60 md:p-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 md:mb-8 md:gap-4">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 md:text-2xl">{title}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
             {subtitle && (
-              <p className="text-xs text-gray-500 md:text-sm">{subtitle}</p>
+              <p className="text-sm text-gray-500">{subtitle}</p>
             )}
           </div>
           {headerExtra}
