@@ -16,15 +16,8 @@ import { MovementsTable } from "@/components/MovementsTable";
 
 import { MovementFormModal } from "@/components/MovementFormModal";
 
-import {
-
-  fetchSummary,
-
-  fetchMovements,
-
-  deleteMovement,
-
-} from "@/lib/gas-client";
+import { fetchMovements, deleteMovement } from "@/lib/gas-client";
+import { filterMovementsByPeriod, summarizeMovements } from "@/lib/summary";
 
 import { formatPeriodRange } from "@/lib/month-period";
 
@@ -85,17 +78,16 @@ export default function HomePage() {
 
     try {
 
-      const [summaryData, movementsData] = await Promise.all([
+      const movementsData = await fetchMovements(500);
+      const periodMovements = filterMovementsByPeriod(
+        movementsData,
+        month,
+        year,
+        periodMode
+      );
 
-        fetchSummary(month, year, periodMode),
-
-        fetchMovements(500),
-
-      ]);
-
-      setSummary(summaryData);
-
-      setMovements(movementsData);
+      setMovements(periodMovements);
+      setSummary(summarizeMovements(periodMovements));
 
     } catch (err) {
 
