@@ -1,6 +1,38 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+
+const MENU_GAP = 4;
+const VIEWPORT_PADDING = 16;
+const MENU_WIDTH = 140;
+const MENU_HEIGHT_ESTIMATE = 80;
+
+function getMenuPosition(
+  button: HTMLButtonElement,
+  menu: HTMLDivElement | null
+) {
+  const rect = button.getBoundingClientRect();
+  const menuWidth = menu?.offsetWidth ?? MENU_WIDTH;
+  const menuHeight = menu?.offsetHeight ?? MENU_HEIGHT_ESTIMATE;
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+
+  const spaceBelow = viewportHeight - rect.bottom - MENU_GAP - VIEWPORT_PADDING;
+  const spaceAbove = rect.top - MENU_GAP - VIEWPORT_PADDING;
+  const openUpward = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+
+  let top = openUpward ? rect.top - menuHeight - MENU_GAP : rect.bottom + MENU_GAP;
+  top = Math.max(
+    VIEWPORT_PADDING,
+    Math.min(top, viewportHeight - menuHeight - VIEWPORT_PADDING)
+  );
+
+  const left = Math.max(
+    VIEWPORT_PADDING,
+    Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - VIEWPORT_PADDING)
+  );
+
+  return { top, left };
+}
 
 interface RowActionsMenuProps {
   onEdit: () => void;
@@ -39,14 +71,29 @@ export function RowActionsMenu({ onEdit, onDelete }: RowActionsMenuProps) {
     };
   }, [open]);
 
-  function toggleOpen() {
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setMenuStyle({
-        top: rect.bottom + 4,
-        left: Math.max(8, rect.right - 140),
-      });
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return;
+
+    function updatePosition() {
+      if (!buttonRef.current) return;
+      setMenuStyle(getMenuPosition(buttonRef.current, menuRef.current));
     }
+
+    updatePosition();
+
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", updatePosition);
+    viewport?.addEventListener("scroll", updatePosition);
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      viewport?.removeEventListener("resize", updatePosition);
+      viewport?.removeEventListener("scroll", updatePosition);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [open]);
+
+  function toggleOpen() {
     setOpen((prev) => !prev);
   }
 
