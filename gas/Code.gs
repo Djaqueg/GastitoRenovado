@@ -1,13 +1,4 @@
-/**
- * GAStito — Google Apps Script API
- *
- * Configuración:
- * 1. Reemplaza SHEET_ID con el ID de tu Google Sheet
- * 2. Asegúrate de que la pestaña "Movimientos" exista con los encabezados correctos
- * 3. Despliega como Web App con acceso "Anyone"
- */
-
-const SHEET_ID = "TU_SHEET_ID_AQUI";
+const SHEET_ID = "1Mac_BaYC1U_3DEyjkcQaGoqbdh0XDpL1RUYHvPAaulo";
 const SHEET_NAME = "Movimientos";
 const BUDGET_SHEET_NAME = "Presupuestos";
 
