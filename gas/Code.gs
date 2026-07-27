@@ -103,7 +103,35 @@ function formatDateValue(value) {
   if (value instanceof Date) {
     return Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
   }
-  return String(value);
+
+  var str = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  var isoParts = str.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+  if (isoParts) {
+    return (
+      isoParts[1] +
+      "-" +
+      padNumber(parseInt(isoParts[2], 10)) +
+      "-" +
+      padNumber(parseInt(isoParts[3], 10))
+    );
+  }
+
+  var dayFirstParts = str.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (dayFirstParts) {
+    return (
+      dayFirstParts[3] +
+      "-" +
+      padNumber(parseInt(dayFirstParts[2], 10)) +
+      "-" +
+      padNumber(parseInt(dayFirstParts[1], 10))
+    );
+  }
+
+  return str;
 }
 
 function padNumber(value) {

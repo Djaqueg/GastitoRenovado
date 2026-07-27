@@ -64,14 +64,72 @@ export function getPeriodDateRange(
   };
 }
 
+export function normalizeMovementDate(fecha: string): string {
+  const trimmed = fecha.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  const isoMatch = trimmed.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  if (isoMatch) {
+    return toIsoDate(
+      Number(isoMatch[1]),
+      Number(isoMatch[2]),
+      Number(isoMatch[3])
+    );
+  }
+
+  const dayFirstMatch = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (dayFirstMatch) {
+    return toIsoDate(
+      Number(dayFirstMatch[3]),
+      Number(dayFirstMatch[2]),
+      Number(dayFirstMatch[1])
+    );
+  }
+
+  return trimmed;
+}
+
+export function getPeriodMonthYearForDate(
+  fecha: string,
+  mode: MonthPeriodMode
+): { month: number; year: number } {
+  const normalizedDate = normalizeMovementDate(fecha);
+  const [yearValue, monthValue, dayValue] = normalizedDate
+    .split("-")
+    .map(Number);
+
+  if (!yearValue || !monthValue || !dayValue) {
+    return getCurrentPeriodMonthYear(mode);
+  }
+
+  if (mode === "calendar") {
+    return { month: monthValue, year: yearValue };
+  }
+
+  if (dayValue >= 25) {
+    let month = monthValue + 1;
+    let year = yearValue;
+    if (month > 12) {
+      month = 1;
+      year += 1;
+    }
+    return { month, year };
+  }
+
+  return { month: monthValue, year: yearValue };
+}
+
 export function movementBelongsToPeriod(
   fecha: string,
   month: number,
   year: number,
   mode: MonthPeriodMode
 ): boolean {
+  const normalizedDate = normalizeMovementDate(fecha);
   const { from, to } = getPeriodDateRange(month, year, mode);
-  return fecha >= from && fecha <= to;
+  return normalizedDate >= from && normalizedDate <= to;
 }
 
 export function getCurrentPeriodMonthYear(
