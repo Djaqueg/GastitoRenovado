@@ -237,7 +237,6 @@ function validateMovementInput(data) {
     throw new Error("El tipo debe ser Ingreso o Gasto");
   }
   if (!data.categoria) throw new Error("La categoría es requerida");
-  if (!data.subcategoria) throw new Error("La subcategoría es requerida");
   if (!data.monto || Number(data.monto) <= 0) {
     throw new Error("El monto debe ser mayor a 0");
   }

@@ -11,7 +11,9 @@ export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 /** Categorías de gasto con sus subcategorías (vacío = sin subcategorías) */
 export const EXPENSE_CATEGORIES: Record<string, string[]> = {
   Arriendo: [],
-  Supermercado: ["Carnicería", "Huevos y paltas"],
+  Supermercado: [],
+  Carnicería: [],
+  "Huevos y paltas": [],
   "Feria/Verdulería": [],
   Cuentas: [
     "Cuenta agua",
