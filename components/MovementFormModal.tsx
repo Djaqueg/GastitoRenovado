@@ -156,20 +156,6 @@ export function MovementFormModal({
 
     if (!form.categoria) newErrors.categoria = "La categoría es requerida";
 
-    if (
-
-      form.tipo === "Gasto" &&
-
-      hasSubcategories(form.categoria, form.tipo) &&
-
-      !form.subcategoria
-
-    ) {
-
-      newErrors.subcategoria = "La subcategoría es requerida";
-
-    }
-
     if (!form.monto || form.monto <= 0)
 
       newErrors.monto = "El monto debe ser mayor a 0";
