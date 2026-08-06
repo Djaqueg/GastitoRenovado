@@ -55,6 +55,16 @@ export function AppShell({
           >
             Presupuesto
           </Link>
+          <Link
+            href="/pagos"
+            className={`rounded-lg px-2 py-1 text-xs font-medium ${
+              pathname === "/pagos"
+                ? "bg-primary-mint text-primary"
+                : "text-gray-500"
+            }`}
+          >
+            Pagos
+          </Link>
           <Button onClick={onNewMovement} className="!px-3 !py-2 text-sm">
             + Nuevo
           </Button>
