@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { formatCLP, formatDate } from "@/lib/format";
+import { downloadMovementsPdf } from "@/lib/export-movements-pdf";
+import { describeActiveFilters } from "@/lib/movements-report";
 import {
   getCurrentPeriodMonthYear,
   getPeriodDateRange,
@@ -16,6 +18,7 @@ interface MovementsTableProps {
   movements: Movement[];
   loading?: boolean;
   periodMode?: MonthPeriodMode;
+  periodLabel?: string;
   onEdit: (movement: Movement) => void;
   onDelete: (movement: Movement) => void;
 }
@@ -63,6 +66,7 @@ export function MovementsTable({
   movements,
   loading,
   periodMode = "calendar",
+  periodLabel = "Período seleccionado",
   onEdit,
   onDelete,
 }: MovementsTableProps) {
@@ -70,6 +74,7 @@ export function MovementsTable({
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const filteredMovements = useMemo(() => {
     return movements.filter(
@@ -94,6 +99,27 @@ export function MovementsTable({
     setSearch("");
     setDateFrom("");
     setDateTo("");
+  }
+
+  async function handleDownloadPdf() {
+    if (filteredMovements.length === 0 || exporting) return;
+
+    setExporting(true);
+    try {
+      await downloadMovementsPdf({
+        movements: filteredMovements,
+        periodLabel,
+        filtersLabel: describeActiveFilters(search, dateFrom, dateTo),
+      });
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "No se pudo generar el PDF. Intenta nuevamente."
+      );
+    } finally {
+      setExporting(false);
+    }
   }
 
   if (loading) {
@@ -149,6 +175,36 @@ export function MovementsTable({
                 {hasFilters && (
                   <span className="h-2 w-2 rounded-full bg-primary" />
                 )}
+              </span>
+            </Button>
+            <Button
+              variant="secondary"
+              className="!px-3 !py-2 text-sm"
+              onClick={handleDownloadPdf}
+              disabled={filteredMovements.length === 0 || exporting}
+              aria-busy={exporting}
+              title={
+                filteredMovements.length === 0
+                  ? "No hay movimientos para exportar"
+                  : "Descargar PDF con el resumen de gastos"
+              }
+            >
+              <span className="inline-flex items-center gap-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                {exporting ? "Generando..." : "Descargar PDF"}
               </span>
             </Button>
           </div>

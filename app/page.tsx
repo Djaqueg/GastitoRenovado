@@ -242,6 +242,8 @@ export default function HomePage() {
 
           periodMode={periodMode}
 
+          periodLabel={formatPeriodRange(month, year, periodMode)}
+
           onEdit={handleEdit}
 
           onDelete={handleDelete}
