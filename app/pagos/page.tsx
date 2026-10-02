@@ -7,6 +7,7 @@ import { MonthSelector } from "@/components/MonthSelector";
 import { PaymentsPanel } from "@/components/PaymentsPanel";
 import { MovementFormModal } from "@/components/MovementFormModal";
 import { fetchMovements } from "@/lib/gas-client";
+import { isAbortError } from "@/lib/gas-upstream";
 import { filterMovementsByPeriod } from "@/lib/summary";
 import { getPaymentChecklistStatus } from "@/lib/payment-checklist";
 import {
@@ -18,23 +19,28 @@ import type { PaymentChecklistStatus } from "@/lib/payment-checklist";
 export default function PagosPage() {
   const { mode: periodMode, setMode: setPeriodMode, isReady } =
     useMonthPeriodMode();
-  const { month, year, setMonth, setYear } = useCurrentPeriodSelection(
-    periodMode,
-    isReady
-  );
+  const { month, year, setMonth, setYear, isPeriodReady } =
+    useCurrentPeriodSelection(periodMode, isReady);
   const [items, setItems] = useState<PaymentChecklistStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
-  const loadPayments = useCallback(async () => {
-    if (!isReady) return;
+  const loadPayments = useCallback(async (signal?: AbortSignal) => {
+    if (!isPeriodReady) return;
 
     setLoading(true);
     setError("");
 
     try {
-      const movementsData = await fetchMovements(500);
+      const movementsData = await fetchMovements(
+        500,
+        month,
+        year,
+        periodMode,
+        signal
+      );
+      if (signal?.aborted) return;
       const periodMovements = filterMovementsByPeriod(
         movementsData,
         month,
@@ -43,18 +49,23 @@ export default function PagosPage() {
       );
       setItems(getPaymentChecklistStatus(periodMovements));
     } catch (err) {
+      if (isAbortError(err) || signal?.aborted) return;
       setError(
         err instanceof Error
           ? err.message
           : "Error al cargar los pagos. Verifica la configuración de Google Sheets."
       );
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
-  }, [isReady, month, year, periodMode]);
+  }, [isPeriodReady, month, year, periodMode]);
 
   useEffect(() => {
-    loadPayments();
+    const controller = new AbortController();
+    void loadPayments(controller.signal);
+    return () => controller.abort();
   }, [loadPayments]);
 
   return (

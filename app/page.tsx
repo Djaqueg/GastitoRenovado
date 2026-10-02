@@ -17,6 +17,7 @@ import { MovementsTable } from "@/components/MovementsTable";
 import { MovementFormModal } from "@/components/MovementFormModal";
 
 import { fetchMovements, deleteMovement } from "@/lib/gas-client";
+import { isAbortError } from "@/lib/gas-upstream";
 import { filterMovementsByPeriod, summarizeMovements } from "@/lib/summary";
 
 import { formatPeriodRange } from "@/lib/month-period";
@@ -35,10 +36,8 @@ export default function HomePage() {
   const { mode: periodMode, setMode: setPeriodMode, isReady } =
     useMonthPeriodMode();
 
-  const { month, year, setMonth, setYear } = useCurrentPeriodSelection(
-    periodMode,
-    isReady
-  );
+  const { month, year, setMonth, setYear, isPeriodReady } =
+    useCurrentPeriodSelection(periodMode, isReady);
 
   const [summary, setSummary] = useState<Summary>({
 
@@ -64,9 +63,9 @@ export default function HomePage() {
 
 
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (signal?: AbortSignal) => {
 
-    if (!isReady) return;
+    if (!isPeriodReady) return;
 
     setLoadingSummary(true);
 
@@ -78,7 +77,14 @@ export default function HomePage() {
 
     try {
 
-      const movementsData = await fetchMovements(500);
+      const movementsData = await fetchMovements(
+        500,
+        month,
+        year,
+        periodMode,
+        signal
+      );
+      if (signal?.aborted) return;
       const periodMovements = filterMovementsByPeriod(
         movementsData,
         month,
@@ -90,6 +96,8 @@ export default function HomePage() {
       setSummary(summarizeMovements(periodMovements));
 
     } catch (err) {
+
+      if (isAbortError(err) || signal?.aborted) return;
 
       setError(
 
@@ -103,19 +111,25 @@ export default function HomePage() {
 
     } finally {
 
-      setLoadingSummary(false);
+      if (!signal?.aborted) {
 
-      setLoadingMovements(false);
+        setLoadingSummary(false);
+
+        setLoadingMovements(false);
+
+      }
 
     }
 
-  }, [isReady, month, year, periodMode]);
+  }, [isPeriodReady, month, year, periodMode]);
 
 
 
   useEffect(() => {
 
-    loadData();
+    const controller = new AbortController();
+    void loadData(controller.signal);
+    return () => controller.abort();
 
   }, [loadData]);
 

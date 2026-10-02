@@ -7,6 +7,7 @@ import { MonthSelector } from "@/components/MonthSelector";
 import { BudgetPanel } from "@/components/BudgetPanel";
 import { MovementFormModal } from "@/components/MovementFormModal";
 import { fetchBudgetStatus } from "@/lib/gas-client";
+import { isAbortError } from "@/lib/gas-upstream";
 import {
   useCurrentPeriodSelection,
   useMonthPeriodMode,
@@ -16,37 +17,41 @@ import type { BudgetStatus } from "@/lib/types";
 export default function PresupuestoPage() {
   const { mode: periodMode, setMode: setPeriodMode, isReady } =
     useMonthPeriodMode();
-  const { month, year, setMonth, setYear } = useCurrentPeriodSelection(
-    periodMode,
-    isReady
-  );
+  const { month, year, setMonth, setYear, isPeriodReady } =
+    useCurrentPeriodSelection(periodMode, isReady);
   const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
-  const loadBudgets = useCallback(async () => {
-    if (!isReady) return;
+  const loadBudgets = useCallback(async (signal?: AbortSignal) => {
+    if (!isPeriodReady) return;
 
     setLoading(true);
     setError("");
 
     try {
-      const data = await fetchBudgetStatus(month, year, periodMode);
+      const data = await fetchBudgetStatus(month, year, periodMode, signal);
+      if (signal?.aborted) return;
       setBudgets(data);
     } catch (err) {
+      if (isAbortError(err) || signal?.aborted) return;
       setError(
         err instanceof Error
           ? err.message
           : "Error al cargar los presupuestos. Verifica la configuración de Google Sheets."
       );
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
-  }, [isReady, month, year, periodMode]);
+  }, [isPeriodReady, month, year, periodMode]);
 
   useEffect(() => {
-    loadBudgets();
+    const controller = new AbortController();
+    void loadBudgets(controller.signal);
+    return () => controller.abort();
   }, [loadBudgets]);
 
   return (
