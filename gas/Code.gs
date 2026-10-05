@@ -243,27 +243,101 @@ function validateMovementInput(data) {
   if (!data.medio_pago) throw new Error("El medio de pago es requerido");
 }
 
+var DUPLICATE_WINDOW_MS = 60000;
+
+function parseTimestampMs(value) {
+  if (value instanceof Date) return value.getTime();
+  var parsed = new Date(String(value || ""));
+  var ms = parsed.getTime();
+  return isNaN(ms) ? 0 : ms;
+}
+
+function movementPayloadMatches(existing, data) {
+  return (
+    existing.fecha === formatDateValue(data.fecha) &&
+    existing.tipo === String(data.tipo) &&
+    existing.categoria === String(data.categoria) &&
+    String(existing.subcategoria || "") === String(data.subcategoria || "") &&
+    Number(existing.monto) === Number(data.monto) &&
+    existing.medio_pago === String(data.medio_pago) &&
+    String(existing.detalle || "") === String(data.detalle || "")
+  );
+}
+
+function getCreateCacheKey(requestId) {
+  return "create_" + requestId;
+}
+
+function findRecentDuplicate(sheet, data) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return null;
+
+  var startRow = Math.max(2, lastRow - 4);
+  var numRows = lastRow - startRow + 1;
+  var values = sheet.getRange(startRow, 1, numRows, HEADERS.length).getValues();
+  var now = Date.now();
+
+  for (var i = values.length - 1; i >= 0; i--) {
+    var existing = rowToMovement(values[i]);
+    if (!movementPayloadMatches(existing, data)) continue;
+    var createdMs = parseTimestampMs(values[i][8]);
+    if (createdMs && now - createdMs <= DUPLICATE_WINDOW_MS) {
+      return existing;
+    }
+  }
+
+  return null;
+}
+
 function createMovement(data) {
   validateMovementInput(data);
 
-  const sheet = getSheet();
-  const id = Utilities.getUuid();
-  const now = new Date().toISOString();
+  var lock = LockService.getScriptLock();
+  lock.waitLock(15000);
 
-  const row = [
-    id,
-    data.fecha,
-    data.tipo,
-    data.categoria,
-    data.subcategoria,
-    Number(data.monto),
-    data.medio_pago,
-    data.detalle || "",
-    now,
-  ];
+  try {
+    var requestId = data.client_request_id ? String(data.client_request_id) : "";
+    var cache = CacheService.getScriptCache();
 
-  sheet.appendRow(row);
-  return rowToMovement(row);
+    if (requestId) {
+      var cached = cache.get(getCreateCacheKey(requestId));
+      if (cached) return JSON.parse(cached);
+    }
+
+    var sheet = getSheet();
+    var duplicate = findRecentDuplicate(sheet, data);
+    if (duplicate) {
+      if (requestId) {
+        cache.put(getCreateCacheKey(requestId), JSON.stringify(duplicate), 120);
+      }
+      return duplicate;
+    }
+
+    var id = Utilities.getUuid();
+    var now = new Date().toISOString();
+    var row = [
+      id,
+      data.fecha,
+      data.tipo,
+      data.categoria,
+      data.subcategoria,
+      Number(data.monto),
+      data.medio_pago,
+      data.detalle || "",
+      now,
+    ];
+
+    sheet.appendRow(row);
+    var created = rowToMovement(row);
+
+    if (requestId) {
+      cache.put(getCreateCacheKey(requestId), JSON.stringify(created), 120);
+    }
+
+    return created;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function updateMovement(data) {

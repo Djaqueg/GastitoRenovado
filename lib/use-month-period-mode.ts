@@ -26,8 +26,10 @@ export function useMonthPeriodMode() {
 }
 
 export function useCurrentPeriodSelection(mode: MonthPeriodMode, isReady: boolean) {
-  const [month, setMonth] = useState(1);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const initial = getCurrentPeriodMonthYear(mode);
+  const [month, setMonth] = useState(initial.month);
+  const [year, setYear] = useState(initial.year);
+  const [isPeriodReady, setIsPeriodReady] = useState(false);
 
   useEffect(() => {
     if (!isReady) return;
@@ -35,7 +37,8 @@ export function useCurrentPeriodSelection(mode: MonthPeriodMode, isReady: boolea
     const current = getCurrentPeriodMonthYear(mode);
     setMonth(current.month);
     setYear(current.year);
+    setIsPeriodReady(true);
   }, [isReady, mode]);
 
-  return { month, year, setMonth, setYear };
+  return { month, year, setMonth, setYear, isPeriodReady };
 }
